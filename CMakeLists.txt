@@ -22,6 +22,7 @@ set(SOURCES
 add_executable(main ${SOURCES})
 
 if(UNIX)
+  target_link_options(main PUBLIC "-Wl,-rpath,/usr/local/lib/" "-Wl,-rpath,.")
   target_link_libraries(main PUBLIC
       gfx
       glfw
