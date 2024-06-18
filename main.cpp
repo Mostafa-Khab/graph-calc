@@ -24,21 +24,22 @@ int main(int argc, const char* argv[])
 
   gfx::program program;
   program.create(
-      "/home/sasa/shaders/shader3d.vert",
-      "/home/sasa/shaders/shader3d.frag"
+      "../shaders/default.vert",
+      "../shaders/default.frag"
       );
   program.link();
 
   int mvp_loc                      = program.getUniformLocation("MVP");
-  gfx::vertex3d::attributes::vpos_location() = program.getAttribLocation("vPos");
-  gfx::vertex3d::attributes::vcol_location() = program.getAttribLocation("vCol");
+  gfx::vertex2d::attributes::vpos_location() = program.getAttribLocation("vPos");
+  gfx::vertex2d::attributes::vcol_location() = program.getAttribLocation("vCol");
 
 
-  gfx::vbuffer<gfx::vertex3d> vbuff;
+  gfx::vbuffer<gfx::vertex2d> vbuff;
   vbuff.bind();
-  vbuff.append(gfx::vertex3d(-0.5, -0.5, 1, 1.f , 0.4, 0.f, 0.5f));
-  vbuff.append(gfx::vertex3d( 0.5, -0.5, 1, 1.f , 0.4, 0.f, 0.5f));
-  vbuff.append(gfx::vertex3d( 0.5,  0.5, 1, 1.f , 0.4, 0.f, 0.5f));
+  vbuff.append(gfx::vertex2d(-0.5, -0.5, gfx::gruv::red));
+  vbuff.append(gfx::vertex2d( 0.5, -0.5, gfx::gruv::red));
+  vbuff.append(gfx::vertex2d(-0.5,  0.5, gfx::gruv::red));
+  vbuff.append(gfx::vertex2d( 0.5,  0.5, gfx::gruv::red));
 
   vbuff.load_data();
 
@@ -72,7 +73,7 @@ int main(int argc, const char* argv[])
     handle_input(window, eye, dt);
 
     context.clear(gfx::gruv::white, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-      vbuff.draw();
+      vbuff.draw(GL_TRIANGLE_STRIP);
     context.display();
 
   }
