@@ -8,8 +8,10 @@
 
 extern "C"
 {
+
 #define LIST_OF_FUNCS \
   PLUG_FUNC(func);    \
+  PLUG_FUNC(func2);    \
 
 #define PLUG_FUNC(X)            \
   float X(float);               \
@@ -18,8 +20,6 @@ extern "C"
   LIST_OF_FUNCS;
 #undef PLUG_FUNC
 
-  //float func(float x);
-  //typedef float (*func_t)(float);
 }
 
 #endif /* !PLUG_HPP */
