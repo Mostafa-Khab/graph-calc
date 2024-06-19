@@ -3,7 +3,7 @@
 #include <GFX/system.hpp>
 #include <GFX/graphics.hpp>
 
-#include <iostream>
+#include <cmath>
 
 #include <dlfcn.h>
 
@@ -14,6 +14,8 @@
  * attributes' locations can be the same across different shader programs.
  * we don't need to override attributes for the the same vertex type if they have similar shaders in the input.
  * gfx::vertex2d can be used in different programs without reassigning attributes of it.
+ * 
+ * I used X_macro style for the first time.
  */
 
 bool handle_input(GLFWwindow* window, gfx::vector3f& eye, float& fov, float dt);
@@ -114,20 +116,32 @@ int main(int argc, const char* argv[])
 
   void* libplug = dlopen("libplug.so", RTLD_NOW);
   CHECK_SHARED_LIB(libplug);
-  func_t func        = reinterpret_cast<func_t>(dlsym(libplug, "func"));
-  CHECK_SHARED_LIB(func);
+
+#define PLUG_FUNC(X) \
+  X##_t X = reinterpret_cast<X##_t>(dlsym(libplug, #X)); \
+  CHECK_SHARED_LIB(X);
+
+  LIST_OF_FUNCS;
+#undef PLUG_FUNC
+  //func_t func        = reinterpret_cast<func_t>(dlsym(libplug, "func"));
+  //CHECK_SHARED_LIB(func);
+
   float* start_index = reinterpret_cast<float*>(dlsym(libplug, "start_index")) ;
   CHECK_SHARED_LIB(start_index);
   float* end_index = reinterpret_cast<float*>(dlsym(libplug, "end_index")) ;
   CHECK_SHARED_LIB(end_index);
 
-  gfx::vbuffer<gfx::vertex2d> vbuff;
-  vbuff.bind();
-  for(float i = *start_index; i <= *end_index + EPSILON; i += 0.05)
-  {
-    vbuff.append(gfx::vertex2d(i, func(i), gfx::gruv::red));
-  }
-  vbuff.load_data();
+#define PLUG_FUNC(X) \
+  gfx::vbuffer<gfx::vertex2d> X##_buff; \
+  X##_buff.bind();                      \
+  for(float i = *start_index; i <= *end_index + EPSILON; i += 0.05) \
+  { \
+    X##_buff.append(gfx::vertex2d(i, X(i), gfx::gruv::red)); \
+  } \
+  X##_buff.load_data();
+
+  LIST_OF_FUNCS;
+#undef PLUG_FUNC
 
   gfx::clock timer;
 
@@ -150,7 +164,7 @@ int main(int argc, const char* argv[])
 
   //s must be an even number to center the origin correctly.
   //for better experiece ratio 1 / 20 is the best.
-  float max = 5.f;
+  float max = (std::abs(*start_index) > std::abs(*end_index))? std::abs(*start_index) : std::abs(*end_index);
   Grid grid;
   grid.fill(max, max * 10.f );
 
@@ -184,20 +198,39 @@ int main(int argc, const char* argv[])
 
       libplug = dlopen("libplug.so", RTLD_NOW);
       CHECK_SHARED_LIB(libplug);
-      func               = reinterpret_cast<func_t>(dlsym(libplug, "func"));
-      CHECK_SHARED_LIB(func);
+#define PLUG_FUNC(X) \
+      X = reinterpret_cast<X##_t>(dlsym(libplug, #X)); \
+      CHECK_SHARED_LIB(X);
+
+      LIST_OF_FUNCS;
+#undef  PLUG_FUNC
+      //func               = reinterpret_cast<func_t>(dlsym(libplug, "func"));
+      //CHECK_SHARED_LIB(func);
+
       float* start_index = reinterpret_cast<float*>(dlsym(libplug, "start_index")) ;
       CHECK_SHARED_LIB(start_index);
       float* end_index   = reinterpret_cast<float*>(dlsym(libplug, "end_index")) ;
       CHECK_SHARED_LIB(end_index);
 
-      vbuff.clear();
-      vbuff.bind();
-      for(float i = *start_index; i <= *end_index + EPSILON; i += 0.05)
-      {
-        vbuff.append(gfx::vertex2d(i, func(i), gfx::gruv::red));
-      }
-      vbuff.load_data();
+#define PLUG_FUNC(X)                                                \
+  X##_buff.clear();                                                 \
+  X##_buff.bind();                                                  \
+  for(float i = *start_index; i <= *end_index + EPSILON; i += 0.05) \
+  {                                                                 \
+    X##_buff.append(gfx::vertex2d(i, X(i), gfx::gruv::red));     \
+  }                                                                 \
+  X##_buff.load_data();
+
+  LIST_OF_FUNCS;
+#undef PLUG_FUNC
+
+      //vbuff.clear();
+      //vbuff.bind();
+      //for(float i = *start_index; i <= *end_index + EPSILON; i += 0.05)
+      //{
+      //  vbuff.append(gfx::vertex2d(i, func(i), gfx::gruv::red));
+      //}
+      //vbuff.load_data();
 
     }
 
@@ -212,7 +245,12 @@ int main(int argc, const char* argv[])
       axis_buff.draw(GL_LINES);
 
       glLineWidth(4.f);
-      vbuff.draw(GL_LINE_STRIP);
+#define PLUG_FUNC(X)                        \
+      X##_buff.draw(GL_LINE_STRIP);
+
+      LIST_OF_FUNCS;
+#undef PLUG_FUNC
+      //vbuff.draw(GL_LINE_STRIP);
     context.display();
 
   }
