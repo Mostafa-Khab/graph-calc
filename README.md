@@ -9,5 +9,16 @@ the function (func in my program) can be loaded using a hot-reload technique if 
 ### NOTE:
 - this project only works for linux. hot-reloading isn't available using windows. (because I lack experience with WIN32 api also POSIX as well) but I was able to achieve hot-reload for linux this time.
 
-![smooth step function](imgs/smoothstep.png)
+### More than one function?
+- you can have more than one function. add the function in src/plug.hpp in LIST_OF_FUNCS in PLUG_FUNC, then
+define the function in src/plug.cpp. recompile the program and now you can see this function.
+- you can edit this functions at runtime, rebuild your plugin and press R, you functions should be updated(that easy).
+
+### In this program, you can find some interesting techniques:
+- hot-reloading code with dlfcn.h header using POSIX.
+- X_macro to be able to draw many functions without even touching main.cpp. (but you still need to recompile)
+- these tricks were learnt from a weird Russian man who owns a YT channel called tsoding-daily. 
+
+
+![smooth step function (older version of this program)](imgs/smoothstep.png)
 ![cosine function](imgs/cosine.png)
