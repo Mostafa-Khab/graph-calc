@@ -9,18 +9,18 @@
 
 #include "src/plug.hpp"
 
-bool handle_input(GLFWwindow* window, gfx::vector3f& eye, float& fov, float dt);
-
-//THIS IS NOT A GOOD PRACTICE!!
-#define print(X) \
-  std::cout << #X << " : " << X << '\n';
-
 /*
  * what leart from this project. 
  * attributes' locations can be the same across different shader programs.
  * we don't need to override attributes for the the same vertex type if they have similar shaders in the input.
  * gfx::vertex2d can be used in different programs without reassigning attributes of it.
  */
+
+bool handle_input(GLFWwindow* window, gfx::vector3f& eye, float& fov, float dt);
+
+//THIS IS NOT A GOOD PRACTICE!!
+#define print(X) \
+  std::cout << #X << " : " << X << '\n';
 
 #define CHECK_SHARED_LIB(X) \
  if(!X) { \
@@ -84,8 +84,8 @@ int main(int argc, const char* argv[])
 {
   Log::level(Log::Level::all);
 
-  const int width  = 800;
-  const int height = 600;
+  const int width  = 700;
+  const int height = 700;
 
   gfx::context context;
   context.setVersion({2, 0});
@@ -167,9 +167,6 @@ int main(int argc, const char* argv[])
     float dt = timer.restart();
 
     view.update(window);
-    //view.data(eye, centre, up);
-    //view.perspective(fov, 0.f, 10.f);
-    view.ortho(1, -1, fov);
     mat4x4_ortho(view.p(),
         -s + eye.x,
          s + eye.x,
