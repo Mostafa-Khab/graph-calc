@@ -8,3 +8,5 @@ the function (func in my program) can be loaded using a hot-reload technique if 
 
 ### NOTE:
 - this project only works for linux. hot-reloading isn't available using windows. (because I lack experience with WIN32 api also POSIX as well) but I was able to achieve hot-reload for linux this time.
+
+![smooth step function](imgs/smoothstep.png)
