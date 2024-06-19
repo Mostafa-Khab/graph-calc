@@ -126,8 +126,6 @@ int main(int argc, const char* argv[])
       centre.y = eye.y;
     } 
 
-    print(fov);
-
     if(glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
     {
       if(libplug)
