@@ -11,14 +11,15 @@
 
 bool handle_input(GLFWwindow* window, gfx::vector3f& eye, float& fov, float dt);
 
+//THIS IS NOT A GOOD PRACTICE!!
 #define print(X) \
   std::cout << #X << " : " << X << '\n';
 
 /*
  * what leart from this project. 
- * attributes' locations can be the same across different programs.
+ * attributes' locations can be the same across different shader programs.
  * we don't need to override attributes for the the same vertex type if they have similar shaders in the input.
- * gfx::vertex2d can be used in different programs with reassigning attributes of it.
+ * gfx::vertex2d can be used in different programs without reassigning attributes of it.
  */
 
 #define CHECK_SHARED_LIB(X) \
@@ -30,12 +31,61 @@ bool handle_input(GLFWwindow* window, gfx::vector3f& eye, float& fov, float dt);
 
 #define EPSILON 0.00001f
 
+class Grid
+{
+  public:
+    Grid(gfx::rgb lcolor = gfx::gruv::white, gfx::rgb bgcolor = gfx::gruv::black)
+      :line_color(lcolor), bg_color(bgcolor)
+    {
+    }
+
+   ~Grid() = default;
+
+   void fill(float max, float s)
+   {
+     if(s < EPSILON)
+       Log::error("division by zero isn't valid: " + std::string(__FILE__));
+
+     for(float i = -max; i < max + EPSILON; i += 2.f * max / s)
+     {
+        buff.append(gfx::vertex2d(i, max, line_color));
+        buff.append(gfx::vertex2d(i,-max, line_color));
+     }
+
+     for(float i = -max; i < max + EPSILON; i += 2.f * max / s)
+     {
+        buff.append(gfx::vertex2d( max, i   , line_color));
+        buff.append(gfx::vertex2d(-max, i   , line_color));
+     }
+     buff.bind();
+     buff.load_data();
+
+
+     bg_buff.bind();
+     bg_buff.append(gfx::vertex2d(-max, -max, bg_color));
+     bg_buff.append(gfx::vertex2d( max, -max, bg_color));
+     bg_buff.append(gfx::vertex2d(-max,  max, bg_color));
+     bg_buff.append(gfx::vertex2d( max,  max, bg_color));
+     bg_buff.load_data();
+   }
+
+   void draw()
+   {
+      bg_buff.draw(GL_TRIANGLE_STRIP);
+      buff.draw(GL_LINES);
+   }
+
+  private:
+    gfx::vbuffer<gfx::vertex2d> buff, bg_buff;
+    gfx::rgb line_color, bg_color;
+};
+
 int main(int argc, const char* argv[])
 {
   Log::level(Log::Level::all);
 
-  const int width  = 700;
-  const int height = 700;
+  const int width  = 800;
+  const int height = 600;
 
   gfx::context context;
   context.setVersion({2, 0});
@@ -56,18 +106,11 @@ int main(int argc, const char* argv[])
       );
   default_prg.link();
 
-  gfx::program bg_prg;
-  bg_prg.create(
-      "../shaders/background.vert",
-      "../shaders/background.frag"
-      );
-  bg_prg.link();
-
   int mvp_loc                                = default_prg.getUniformLocation("MVP");
   gfx::vertex2d::attributes::vpos_location() = default_prg.getAttribLocation("vPos");
   gfx::vertex2d::attributes::vcol_location() = default_prg.getAttribLocation("vCol");
 
-  int bg_resolution_loc       = bg_prg.getUniformLocation("u_resolution");
+  int default_resolution_loc       = default_prg.getUniformLocation("u_resolution");
 
   void* libplug = dlopen("libplug.so", RTLD_NOW);
   CHECK_SHARED_LIB(libplug);
@@ -86,14 +129,6 @@ int main(int argc, const char* argv[])
   }
   vbuff.load_data();
 
-  gfx::vbuffer<gfx::vertex2d> bg_buff;
-  bg_buff.bind();
-  bg_buff.append(gfx::vertex2d(-8.0, -8.0, gfx::gruv::black));
-  bg_buff.append(gfx::vertex2d( 8.0, -8.0, gfx::gruv::black));
-  bg_buff.append(gfx::vertex2d(-8.0,  8.0, gfx::gruv::black));
-  bg_buff.append(gfx::vertex2d( 8.0,  8.0, gfx::gruv::black));
-  bg_buff.load_data();
-
   gfx::clock timer;
 
   gfx::view view(width, height);
@@ -107,24 +142,43 @@ int main(int argc, const char* argv[])
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_DST_ALPHA);
   glBlendEquation(GL_FUNC_ADD);
 
-  auto resolution = gfx::vector2f(width, height);
-  bg_prg.use();
-  glUniform2fv(bg_resolution_loc, 1, reinterpret_cast<const float*>(&resolution));
+  default_prg.use();
+  //glUniform2fv(default_resolution_loc, 1, reinterpret_cast<const float*>(&resolution));
+  glUniform2f(default_resolution_loc, (float)width, (float)height);
+
+  float s = 2.f;
+
+  //s must be an even number to center the origin correctly.
+  //for better experiece ratio 1 / 20 is the best.
+  float max = 5.f;
+  Grid grid;
+  grid.fill(max, max * 10.f );
+
+  gfx::vbuffer<gfx::vertex2d> axis_buff;
+  axis_buff.append(gfx::vertex2d( 0, max, gfx::gruv::white));
+  axis_buff.append(gfx::vertex2d( 0,-max, gfx::gruv::white));
+  axis_buff.append(gfx::vertex2d( max, 0, gfx::gruv::white));
+  axis_buff.append(gfx::vertex2d(-max, 0, gfx::gruv::white));
+  axis_buff.bind();
+  axis_buff.load_data();
 
   while(!context.should_close())
   {
     float dt = timer.restart();
 
     view.update(window);
-    view.data(eye, centre, up);
-    view.perspective(fov, 0.f, 10.f);
+    //view.data(eye, centre, up);
+    //view.perspective(fov, 0.f, 10.f);
+    view.ortho(1, -1, fov);
+    mat4x4_ortho(view.p(),
+        -s + eye.x,
+         s + eye.x,
+        -s + eye.y, 
+         s + eye.y,
+        -1, 1);
     view.multiply();
 
-    if(handle_input(window, eye, fov, dt))
-    {
-      centre.x = eye.x;
-      centre.y = eye.y;
-    } 
+    handle_input(window, eye, s, dt);
 
     if(glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
     {
@@ -133,11 +187,11 @@ int main(int argc, const char* argv[])
 
       libplug = dlopen("libplug.so", RTLD_NOW);
       CHECK_SHARED_LIB(libplug);
-      func    = reinterpret_cast<func_t>(dlsym(libplug, "func"));
+      func               = reinterpret_cast<func_t>(dlsym(libplug, "func"));
       CHECK_SHARED_LIB(func);
       float* start_index = reinterpret_cast<float*>(dlsym(libplug, "start_index")) ;
       CHECK_SHARED_LIB(start_index);
-      float* end_index = reinterpret_cast<float*>(dlsym(libplug, "end_index")) ;
+      float* end_index   = reinterpret_cast<float*>(dlsym(libplug, "end_index")) ;
       CHECK_SHARED_LIB(end_index);
 
       vbuff.clear();
@@ -150,24 +204,18 @@ int main(int argc, const char* argv[])
 
     }
 
-    context.clear(gfx::gruv::white, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    default_prg.use();
+    view.set_mvp(mvp_loc);
 
-    {
-      view.set_mvp(mvp_loc);
-      bg_prg.use();
-      bg_buff.draw(GL_TRIANGLE_STRIP);
-      bg_buff.unbind();
-    }
+    context.clear(gfx::gruv::black, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+      glLineWidth(1.f);
+      grid.draw();
 
-    {
-      view.set_mvp(mvp_loc);
-      default_prg.use();
-      glLineWidth(8.f);
+      glLineWidth(5.f);
+      axis_buff.draw(GL_LINES);
+
+      glLineWidth(4.f);
       vbuff.draw(GL_LINE_STRIP);
-      vbuff.unbind();
-    }
-
-
     context.display();
 
   }
@@ -212,10 +260,10 @@ bool handle_input(GLFWwindow* window, gfx::vector3f& eye, float& fov, float dt)
     pressed = true;
   }
 
-  if(glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS && fov > 1.22)
+  if(glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS && fov > 0.2  /*&& fov > 1.22*/)
   {
     fov -= dt;
-  } else if(glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS && fov < 1.85)
+  } else if(glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS && fov < 3.f /*&& fov < 1.85*/)
   {
     fov += dt;
   }
