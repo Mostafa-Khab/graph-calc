@@ -31,6 +31,14 @@ bool handle_input(GLFWwindow* window, gfx::vector3f& eye, float& fov, float dt);
     return 5; \
  }
 
+#define CHECK_SHARED_LIB_COLOR(X) \
+ if(!X) { \
+    Log::error("make sure to define " + std::string(#X) + " in src/plug.cpp"); \
+    Log::error("failed to load: " + std::string(#X)); \
+    Log::error(dlerror()); \
+    return 5; \
+ }
+
 #define EPSILON 0.00001f
 
 class Grid
@@ -91,7 +99,7 @@ int main(int argc, const char* argv[])
 
   gfx::context context;
   context.setVersion({2, 0});
-  context.setWindowData(width, height, "gfx-test");
+  context.setWindowData(width, height, "gfx-test", false);
 
   bool result = context.init();
   GLFW_ASSERT(result, "failed to create gfx context");
@@ -123,8 +131,6 @@ int main(int argc, const char* argv[])
 
   LIST_OF_FUNCS;
 #undef PLUG_FUNC
-  //func_t func        = reinterpret_cast<func_t>(dlsym(libplug, "func"));
-  //CHECK_SHARED_LIB(func);
 
   float* start_index = reinterpret_cast<float*>(dlsym(libplug, "start_index")) ;
   CHECK_SHARED_LIB(start_index);
@@ -132,11 +138,18 @@ int main(int argc, const char* argv[])
   CHECK_SHARED_LIB(end_index);
 
 #define PLUG_FUNC(X) \
+  gfx::rgb* X##_color =  reinterpret_cast<gfx::rgb*>(dlsym(libplug, #X"_color")); \
+  CHECK_SHARED_LIB_COLOR(X##_color);
+
+  LIST_OF_FUNCS;
+#undef PLUG_FUNC
+
+#define PLUG_FUNC(X) \
   gfx::vbuffer<gfx::vertex2d> X##_buff; \
   X##_buff.bind();                      \
   for(float i = *start_index; i <= *end_index + EPSILON; i += 0.05) \
   { \
-    X##_buff.append(gfx::vertex2d(i, X(i), gfx::gruv::red)); \
+    X##_buff.append(gfx::vertex2d(i, X(i), *X##_color)); \
   } \
   X##_buff.load_data();
 
@@ -217,7 +230,7 @@ int main(int argc, const char* argv[])
   X##_buff.bind();                                                  \
   for(float i = *start_index; i <= *end_index + EPSILON; i += 0.05) \
   {                                                                 \
-    X##_buff.append(gfx::vertex2d(i, X(i), gfx::gruv::red));     \
+    X##_buff.append(gfx::vertex2d(i, X(i), *X##_color));     \
   }                                                                 \
   X##_buff.load_data();
 
