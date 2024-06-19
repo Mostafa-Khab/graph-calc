@@ -1,3 +1,5 @@
+#include <cmath>
+
 #include "plug.hpp"
 
 #define EPSILON 0.0001
@@ -11,14 +13,14 @@ extern "C"
 
   float func(float x)
   {
-    if(x < EPSILON)
-      return 0;
-    else if(x > 1.f - EPSILON)
-      return 1.f;
+    //if(x < EPSILON)
+    //  return 0;
+    //else if(x > 1.f - EPSILON)
+    //  return 1.f;
 
-    return smoothstep(x);
+    return std::cos(x * 5);
   }
 
-  float start_index = -2.0;
-  float end_index   =  2.0;
+  float start_index = -5.0;
+  float end_index   =  5.0;
 }
