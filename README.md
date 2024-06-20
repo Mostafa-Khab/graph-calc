@@ -12,7 +12,8 @@ The weird truth about this program is that it draws the functions using c++, No 
 
 ### More than one function?
 - you can have more than one function. add the function in src/plug.hpp in LIST_OF_FUNCS in PLUG_FUNC, then
-define the function in src/plug.cpp. recompile the program and now you can see this function.
+define the function in src/plug.cpp. recompile the program and now you can see this function. don't forget to 
+define the color for the function. see (src/plug.cpp)
 - you can edit this functions at runtime, rebuild your plugin and press R, you functions should be updated(that easy).
 - you can edit also colors as well (see src/plug.cpp). BUT you MUST define the color for your function!!
 
