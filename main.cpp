@@ -5,7 +5,11 @@
 
 #include <cmath>
 
-#include <dlfcn.h>
+#ifdef WIN32
+  #include <windows.h>
+#else
+  #include <dlfcn.h>
+#endif
 
 #include "src/plug.hpp"
 
@@ -19,6 +23,22 @@
  */
 
 bool handle_input(GLFWwindow* window, gfx::vector3f& eye, float& fov, float dt);
+
+#ifdef WIN32
+  #define dlerror() "some dll shit failed to load"
+#endif
+
+#ifdef WIN32
+  #define LIB_HANDLE HINSTANCE
+  #define dlopen LoadLibrary
+  #define dlsym GetProcAddress
+  #define dlclose FreeLibrary
+  #define SUFFIX "dll"
+#else
+  #define LIB_HANDLE void*
+  #define dlopen(X) dlopen((X), RTLD_NOW)
+  #define SUFFIX "so"
+#endif
 
 //THIS IS NOT A GOOD PRACTICE!!
 #define print(X) \
@@ -122,7 +142,7 @@ int main(int argc, const char* argv[])
 
   int default_resolution_loc       = default_prg.getUniformLocation("u_resolution");
 
-  void* libplug = dlopen("libplug.so", RTLD_NOW);
+  LIB_HANDLE libplug = dlopen("libplug." SUFFIX/*, RTLD_NOW*/);
   CHECK_SHARED_LIB(libplug);
 
 #define PLUG_FUNC(X) \
@@ -209,7 +229,7 @@ int main(int argc, const char* argv[])
       if(libplug)
         dlclose(libplug);
 
-      libplug = dlopen("libplug.so", RTLD_NOW);
+      libplug = dlopen("libplug." SUFFIX); //NOTE: this is a macro in windows and POSIX(UNIX)
       CHECK_SHARED_LIB(libplug);
 #define PLUG_FUNC(X) \
       X = reinterpret_cast<X##_t>(dlsym(libplug, #X)); \

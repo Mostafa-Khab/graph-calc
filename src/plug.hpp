@@ -9,13 +9,19 @@
 extern "C"
 {
 
-#define LIST_OF_FUNCS \
-  PLUG_FUNC(func);    \
+#define LIST_OF_FUNCS  \
+  PLUG_FUNC(func);     \
   PLUG_FUNC(func2);    \
 
-#define PLUG_FUNC(X)            \
-  float X(float);               \
-  typedef float (*X##_t)(float);
+#ifdef WIN32
+  #define PLUG_FUNC(X)            \
+    float X(float);               \
+    typedef float (__stdcall *X##_t)(float);
+#else
+  #define PLUG_FUNC(X)            \
+    float X(float);               \
+    typedef float (*X##_t)(float);
+#endif
 
   LIST_OF_FUNCS;
 #undef PLUG_FUNC

@@ -18,22 +18,29 @@
  * NOTE: this is a must in our case. or the app will crash!!!
  */
 
-gfx::rgb func_color  = gfx::gruv::aqua;
-gfx::rgb func2_color = gfx::gruv::red;
+#ifdef WIN32
+  #define EXPORTING __declspec(dllexport) __stdcall
+#else
+  #define EXPORTING
+#endif
+
+gfx::rgb EXPORTING func_color  = gfx::gruv::aqua;
+gfx::rgb EXPORTING func2_color = gfx::gruv::red;
 
 extern "C"
 {
 
-  float func(float x)
+
+  float EXPORTING func(float x)
   {
     return std::cos( -1.5 + x * 4.f) / 2.f * 1.f / 0.8 + 0.5;
   }
 
-  float func2(float x)
+  float EXPORTING func2(float x)
   {
     return std::sin( -1.5 + x * 4.f) / 2.f * 1.f / 0.8 + 0.5;
   }
 
-  float start_index = -5.0;
-  float end_index   =  5.0;
+  float EXPORTING start_index = -5.0;
+  float EXPORTING end_index   =  5.0;
 }
