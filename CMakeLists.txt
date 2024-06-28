@@ -44,8 +44,8 @@ if(UNIX)
 elseif(WIN32)
   target_link_libraries(main PUBLIC
     gfx
-    glfw3dll
-   #glfw3
+   #glfw3dll
+    glfw3
     opengl32
     gdi32
     logger
