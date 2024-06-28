@@ -8,8 +8,8 @@ if(UNIX)
   find_package(glfw3 3.3 REQUIRED)
   find_package(OpenGL REQUIRED)
 elseif(WIN32)
-  include_directories(/usr/i686-w64-mingw32/include/ /usr/i686-w64-mingw32/local/include/) 
-  link_directories(/usr/i686-w64-mingw32/local/lib/) 
+  include_directories(/usr/x86_64-w64-mingw32/include/ /usr/x86_64-w64-mingw32/local/include/) 
+  link_directories(/usr/x86_64-w64-mingw32/local/lib/) 
 endif()
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
@@ -22,6 +22,9 @@ set(SOURCES
 add_executable(main ${SOURCES})
 
 add_library(plug SHARED src/plug.cpp src/plug.hpp)
+if(WIN32)
+  target_link_libraries(plug PUBLIC gfx)
+endif()
 
 if(UNIX)
   target_link_options(main PUBLIC "-Wl,-rpath,/usr/local/lib/" "-Wl,-rpath,.")
@@ -41,7 +44,8 @@ if(UNIX)
 elseif(WIN32)
   target_link_libraries(main PUBLIC
     gfx
-    glfw3
+    glfw3dll
+   #glfw3
     opengl32
     gdi32
     logger
