@@ -1,4 +1,5 @@
 build/*
+win64-build/*
 .cache/*
 main.pdf
 shaders/*.bak
