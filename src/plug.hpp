@@ -12,6 +12,7 @@ extern "C"
 #define LIST_OF_FUNCS  \
   PLUG_FUNC(func);     \
   PLUG_FUNC(func2);    \
+  PLUG_FUNC(func3);    \
 
 #ifdef WIN32
   #define PLUG_FUNC(X)            \

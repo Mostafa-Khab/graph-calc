@@ -3,6 +3,7 @@
 #include <GFX/system.hpp>
 #include <GFX/graphics.hpp>
 
+#include <iostream>
 #include <cmath>
 
 #ifdef WIN32
@@ -128,6 +129,7 @@ int main(int argc, const char* argv[])
   context.getWindow(window);
 
   glfwSetKeyCallback(window, gfx::callback::key);
+  glfwSetMouseButtonCallback(window, gfx::callback::button);
 
   gfx::program default_prg;
   default_prg.create(
@@ -179,15 +181,16 @@ int main(int argc, const char* argv[])
   gfx::clock timer;
 
   gfx::view view(width, height);
-  float fov = 1.57;
 
   gfx::vector3f eye(0, 0, 2);
   gfx::vector3f centre(0, 0,  1);
   gfx::vector3f up(0, 1,  0);
 
   glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_DST_ALPHA);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glBlendEquation(GL_FUNC_ADD);
+
+  glEnable(GL_PROGRAM_POINT_SIZE);
 
   default_prg.use();
   //glUniform2fv(default_resolution_loc, 1, reinterpret_cast<const float*>(&resolution));
@@ -209,9 +212,44 @@ int main(int argc, const char* argv[])
   axis_buff.bind();
   axis_buff.load_data();
 
+  gfx::vbuffer<gfx::vertex2d> points;
+
+  bool updated = false;
+  float pop_cooldown = 0.f;
   while(!context.should_close())
   {
     float dt = timer.restart();
+    gfx::mouse::update(window);
+
+    if(glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS && !updated)
+    {
+      auto mx = gfx::mouse::x * s  + eye.x;
+      auto my = gfx::mouse::y * s  + eye.y;
+      std::cout << "x: " << mx << ' '
+                << "y: " << my << '\n';
+
+      points.append(gfx::vertex2d(mx, my, gfx::gruv::yellow));
+      updated = true;
+    }
+
+    if(glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE && updated)
+    {
+      points.bind();
+      points.load_data();
+      updated = false;
+    }
+
+    pop_cooldown += dt;
+    if(glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS && pop_cooldown > 0.25)
+    {
+      if(points.size() > 0)
+      {
+        points.pop_back();
+        points.bind();
+        points.load_data();
+        pop_cooldown = 0;
+      }
+    }
 
     view.update(window);
     mat4x4_ortho(view.p(),
@@ -248,7 +286,7 @@ int main(int argc, const char* argv[])
 #define PLUG_FUNC(X)                                                \
   X##_buff.clear();                                                 \
   X##_buff.bind();                                                  \
-  for(float i = *start_index; i <= *end_index + EPSILON; i += 0.05) \
+  for(float i = *start_index; i <= *end_index + EPSILON; i += 0.025) \
   {                                                                 \
     X##_buff.append(gfx::vertex2d(i, X(i), *X##_color));     \
   }                                                                 \
@@ -256,14 +294,6 @@ int main(int argc, const char* argv[])
 
   LIST_OF_FUNCS;
 #undef PLUG_FUNC
-
-      //vbuff.clear();
-      //vbuff.bind();
-      //for(float i = *start_index; i <= *end_index + EPSILON; i += 0.05)
-      //{
-      //  vbuff.append(gfx::vertex2d(i, func(i), gfx::gruv::red));
-      //}
-      //vbuff.load_data();
 
     }
 
@@ -283,7 +313,7 @@ int main(int argc, const char* argv[])
 
       LIST_OF_FUNCS;
 #undef PLUG_FUNC
-      //vbuff.draw(GL_LINE_STRIP);
+      points.draw(GL_POINTS);
     context.display();
 
   }

@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.25)
 project(MY_MAIN_PROJ)
 
 set(DEPS_PATH /home/sasa/glfw-3.3.9/deps/)
-include_directories(${DEPS_PATH})
+include_directories(${DEPS_PATH} /usr/include/freetype2)
 
 if(UNIX)
   find_package(glfw3 3.3 REQUIRED)
@@ -39,6 +39,7 @@ if(UNIX)
       dl
       Xinerama
       Xcursor
+      freetype
       logger
   )
 elseif(WIN32)
@@ -48,6 +49,7 @@ elseif(WIN32)
     glfw3
     opengl32
     gdi32
+    freetype
     logger
   )
 endif()
