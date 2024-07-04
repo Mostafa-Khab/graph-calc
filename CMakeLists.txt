@@ -6,7 +6,7 @@ include_directories(${DEPS_PATH} /usr/include/freetype2)
 
 if(UNIX)
   find_package(glfw3 3.3 REQUIRED)
-  find_package(OpenGL REQUIRED)
+  #find_package(OpenGL REQUIRED)
 elseif(WIN32)
   include_directories(/usr/x86_64-w64-mingw32/include/ /usr/x86_64-w64-mingw32/local/include/) 
   link_directories(/usr/x86_64-w64-mingw32/local/lib/) 
@@ -31,14 +31,14 @@ if(UNIX)
   target_link_libraries(main PUBLIC
       gfx
       glfw
-      OpenGL::GL
-      Xrandr
-      Xi
-      X11
-      pthread
-      dl
-      Xinerama
-      Xcursor
+     #OpenGL::GL
+     #Xrandr
+     #Xi
+     #X11
+     #pthread
+     #dl
+     #Xinerama
+     #Xcursor
       freetype
       logger
   )
