@@ -4,6 +4,7 @@
 #include <GFX/graphics.hpp>
 
 #include <iostream>
+#include <iomanip>
 #include <cmath>
 
 #ifdef WIN32
@@ -143,6 +144,7 @@ int main(int argc, const char* argv[])
   gfx::vertex2d::attributes::vcol_location() = default_prg.getAttribLocation("vCol");
 
   int default_resolution_loc       = default_prg.getUniformLocation("u_resolution");
+  int u_size_loc                   = default_prg.getUniformLocation("u_size");
 
   LIB_HANDLE libplug = dlopen("libplug." SUFFIX/*, RTLD_NOW*/);
   CHECK_SHARED_LIB(libplug);
@@ -225,8 +227,9 @@ int main(int argc, const char* argv[])
     {
       auto mx = gfx::mouse::x * s  + eye.x;
       auto my = gfx::mouse::y * s  + eye.y;
-      std::cout << "x: " << mx << ' '
-                << "y: " << my << '\n';
+      std::cout << std::setprecision(5)
+                << "x: " << std::setw(10) << std::left << mx << ' '
+                << "y: " << std::setw(10) << std::left << my << '\n';
 
       points.append(gfx::vertex2d(mx, my, gfx::gruv::yellow));
       updated = true;
@@ -260,7 +263,8 @@ int main(int argc, const char* argv[])
         -1, 1);
     view.multiply();
 
-    handle_input(window, eye, s, dt);
+    if(handle_input(window, eye, s, dt))
+      glUniform1f(u_size_loc, s);
 
     if(glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
     {
@@ -361,9 +365,11 @@ bool handle_input(GLFWwindow* window, gfx::vector3f& eye, float& fov, float dt)
   if(glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS && fov > 0.2  /*&& fov > 1.22*/)
   {
     fov -= dt;
+    pressed = true;
   } else if(glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS && fov < 3.f /*&& fov < 1.85*/)
   {
     fov += dt;
+    pressed = true;
   }
 
   return pressed;
