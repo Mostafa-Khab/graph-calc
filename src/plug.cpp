@@ -61,10 +61,10 @@ extern "C"
                       : (1 + ease_out(2 * x - 1)) / 2;
     }
 
+#define A 0.5
   float EXPORTING func(float x)
   {
-    return x;
-    //return ease_inout(x);
+    return (1 / (std::abs(A) * std::sqrt(M_PI))) * std::exp(-std::pow(x / A, 2));
   }
 
   float EXPORTING func2(float x)
