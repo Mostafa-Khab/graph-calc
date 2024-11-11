@@ -173,7 +173,7 @@ int main(int argc, const char* argv[])
     ++integrals_num;
   }
 
-  printf("%u functions are loaded", funcs_num); 
+  printf("%u functions are loaded\n", funcs_num); 
 
   gfx::vbuffer<gfx::vertex2d> buffs[funcs_num];
   gfx::vbuffer<gfx::vertex2d> integrals_buffs[integrals_num];
@@ -190,14 +190,24 @@ int main(int argc, const char* argv[])
 
   for(int i = 0; i < integrals_num; ++i)
   {
+    if(integrals[i].a >= integrals[i].b)
+    {
+      std::swap(integrals[i].a, integrals[i].b);
+      printf("a was greater than b in your integral function, they were swapped\n");
+    }
+
+    float sum = 0.f;
     integrals_buffs[i].bind();
-    for(float j = *integrals[i].a; j <= *integrals[i].b + EPSILON; j += 0.05)
+    for(float j = integrals[i].a; j <= integrals[i].b + EPSILON; j += 0.05)
     { 
-      integrals_buffs[i].append(gfx::vertex2d(j, 0, colors[i]));
-      integrals_buffs[i].append(gfx::vertex2d(j, integrals[i].f(j), colors[i]));
+      integrals_buffs[i].append(gfx::vertex2d(j, 0, integrals_colors[i]));
+      integrals_buffs[i].append(gfx::vertex2d(j, integrals[i].f(j), integrals_colors[i]));
+
+      sum += integrals[i].f(j) * 0.05;
     }
 
     integrals_buffs[i].load_data();
+    printf("function [%d] integration =  %f\n", i, sum);
   }
 
   gfx::clock timer;
@@ -298,7 +308,7 @@ int main(int argc, const char* argv[])
       funcs = reinterpret_cast<func_t*>(dlsym(libplug, "funcs"));
       colors =  reinterpret_cast<gfx::rgb*>(dlsym(libplug, "colors")); //get symbol using nm
 
-      integrals = reinterpret_cast<func_t*>(dlsym(libplug, "integrals"));
+      integrals = reinterpret_cast<Integration*>(dlsym(libplug, "integrals"));
       integrals_colors =  reinterpret_cast<gfx::rgb*>(dlsym(libplug, "integrals_colors"));
 
       start = reinterpret_cast<float*>(dlsym(libplug, "start")) ;
@@ -318,7 +328,7 @@ int main(int argc, const char* argv[])
       }
 
       integrals_num = 0;
-      while(integrals[integrals_num] != NULL)
+      while(integrals[integrals_num].f != NULL)
       {
         ++integrals_num;
       }
@@ -337,15 +347,25 @@ int main(int argc, const char* argv[])
 
       for(int i = 0; i < integrals_num; ++i)
       {
-
         integrals_buffs[i].clear();                                                 
-        integrals_buffs[i].bind();                                                  
-        for(float j = *start; j <= *finish + EPSILON; j += 0.025) 
-        {                                                                 
-          integrals_buffs[i].append(gfx::vertex2d(j, 0, colors[i]));     
-          integrals_buffs[i].append(gfx::vertex2d(j, funcs[i](j), colors[i]));     
-        }                                                                 
+        if(integrals[i].a >= integrals[i].b)
+        {
+          std::swap(integrals[i].a, integrals[i].b);
+          printf("a was greater than b in your integral function, they were swapped\n");
+        }
+
+        float sum = 0;
+        integrals_buffs[i].bind();
+        for(float j = integrals[i].a; j <= integrals[i].b + EPSILON; j += 0.05)
+        { 
+          integrals_buffs[i].append(gfx::vertex2d(j, 0, integrals_colors[i]));
+          integrals_buffs[i].append(gfx::vertex2d(j, integrals[i].f(j), integrals_colors[i]));
+
+          sum += integrals[i].f(j) * 0.05;
+        }
+
         integrals_buffs[i].load_data();
+        printf("function [%d] integration =  %f\n", i, sum);
       }
     }
 

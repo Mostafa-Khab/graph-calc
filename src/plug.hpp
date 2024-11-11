@@ -11,7 +11,7 @@
   struct Integration
   {
     func_t f;
-    int a = 0, b = 0;
+    float a = 0, b = 0;
   };
 
 #endif /* !PLUG_HPP */

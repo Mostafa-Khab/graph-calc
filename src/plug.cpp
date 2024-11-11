@@ -32,12 +32,12 @@ extern "C"
   struct Integration
   {
     func_t f = NULL;
-    int a = 0, b = 0;
+    float a = 0, b = 0;
   };
 
   float f(float x)
   {
-    return x * x * x;
+    return sin(x);
   }
 
   func_t funcs[] = 
@@ -48,7 +48,7 @@ extern "C"
 
   Integration integrals[] = 
   {
-    {f, 0, 10},
+    {f, 0, M_PI},
     {NULL, 0, 0},                //should exits to know the count of the integrals functions
   };
 
