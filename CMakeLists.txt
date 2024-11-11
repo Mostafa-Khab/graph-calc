@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.25)
 project(MY_MAIN_PROJ)
 
-set(DEPS_PATH /home/sasa/glfw-3.3.9/deps/)
+set(DEPS_PATH /sasa/glfw-src/deps/)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(SOURCES main.cpp ${DEPS_PATH}/glad_gl.c)
 
@@ -34,6 +34,7 @@ if(UNIX)
      #dl
      #Xinerama
      #Xcursor
+      logger
       freetype
   )
 elseif(WIN32)

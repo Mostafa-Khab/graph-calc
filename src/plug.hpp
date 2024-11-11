@@ -6,27 +6,12 @@
 #ifndef PLUG_HPP
 #define PLUG_HPP
 
-extern "C"
-{
+  typedef float (*func_t)(float);
 
-#define LIST_OF_FUNCS  \
-  PLUG_FUNC(func);     \
-  PLUG_FUNC(func2);    \
-  PLUG_FUNC(func3);    \
-
-#ifdef WIN32
-  #define PLUG_FUNC(X)            \
-    float X(float);               \
-    typedef float (__stdcall *X##_t)(float);
-#else
-  #define PLUG_FUNC(X)            \
-    float X(float);               \
-    typedef float (*X##_t)(float);
-#endif
-
-  LIST_OF_FUNCS;
-#undef PLUG_FUNC
-
-}
+  struct Integration
+  {
+    func_t f;
+    int a = 0, b = 0;
+  };
 
 #endif /* !PLUG_HPP */

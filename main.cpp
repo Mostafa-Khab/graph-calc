@@ -142,6 +142,7 @@ int main(int argc, const char* argv[])
   int mvp_loc                                = default_prg.getUniformLocation("MVP");
   gfx::vertex2d::attributes::vpos_location() = default_prg.getAttribLocation("vPos");
   gfx::vertex2d::attributes::vcol_location() = default_prg.getAttribLocation("vCol");
+  int u_alpha_loc                            = default_prg.getUniformLocation("u_alpha");
 
   int default_resolution_loc       = default_prg.getUniformLocation("u_resolution");
   int u_size_loc                   = default_prg.getUniformLocation("u_size");
@@ -149,36 +150,55 @@ int main(int argc, const char* argv[])
   LIB_HANDLE libplug = dlopen("libplug." SUFFIX/*, RTLD_NOW*/);
   CHECK_SHARED_LIB(libplug);
 
-#define PLUG_FUNC(X) \
-  X##_t X = reinterpret_cast<X##_t>(dlsym(libplug, #X)); \
-  CHECK_SHARED_LIB(X);
+  float* start = reinterpret_cast<float*>(dlsym(libplug, "start")) ;
+  CHECK_SHARED_LIB(start);
+  float* finish = reinterpret_cast<float*>(dlsym(libplug, "finish")) ;
+  CHECK_SHARED_LIB(finish);
 
-  LIST_OF_FUNCS;
-#undef PLUG_FUNC
+  func_t* funcs = reinterpret_cast<func_t*>(dlsym(libplug, "funcs"));
+  gfx::rgb* colors = reinterpret_cast<gfx::rgb*>(dlsym(libplug, "colors"));
 
-  float* start_index = reinterpret_cast<float*>(dlsym(libplug, "start_index")) ;
-  CHECK_SHARED_LIB(start_index);
-  float* end_index = reinterpret_cast<float*>(dlsym(libplug, "end_index")) ;
-  CHECK_SHARED_LIB(end_index);
+  Integration* integrals = reinterpret_cast<Integration*>(dlsym(libplug, "integrals"));
+  gfx::rgb* integrals_colors = reinterpret_cast<gfx::rgb*>(dlsym(libplug, "integrals_colors"));
 
-#define PLUG_FUNC(X) \
-  gfx::rgb* X##_color =  reinterpret_cast<gfx::rgb*>(dlsym(libplug, #X"_color")); \
-  CHECK_SHARED_LIB_COLOR(X##_color);
+  unsigned int funcs_num = 0;
+  while(funcs[funcs_num ] != NULL)
+  {
+    ++funcs_num;
+  }
 
-  LIST_OF_FUNCS;
-#undef PLUG_FUNC
+  unsigned int integrals_num = 0;
+  while(integrals[integrals_num].f != NULL)
+  {
+    ++integrals_num;
+  }
 
-#define PLUG_FUNC(X) \
-  gfx::vbuffer<gfx::vertex2d> X##_buff; \
-  X##_buff.bind();                      \
-  for(float i = *start_index; i <= *end_index + EPSILON; i += 0.05) \
-  { \
-    X##_buff.append(gfx::vertex2d(i, X(i), *X##_color)); \
-  } \
-  X##_buff.load_data();
+  printf("%u functions are loaded", funcs_num); 
 
-  LIST_OF_FUNCS;
-#undef PLUG_FUNC
+  gfx::vbuffer<gfx::vertex2d> buffs[funcs_num];
+  gfx::vbuffer<gfx::vertex2d> integrals_buffs[integrals_num];
+
+  for(int i = 0; i < funcs_num; ++i)
+  {
+    buffs[i].bind();
+    for(float j = *start; j <= *finish + EPSILON; j += 0.05)
+    { 
+      buffs[i].append(gfx::vertex2d(j, funcs[i](j), colors[i]));
+    }
+    buffs[i].load_data();
+  }
+
+  for(int i = 0; i < integrals_num; ++i)
+  {
+    integrals_buffs[i].bind();
+    for(float j = *integrals[i].a; j <= *integrals[i].b + EPSILON; j += 0.05)
+    { 
+      integrals_buffs[i].append(gfx::vertex2d(j, 0, colors[i]));
+      integrals_buffs[i].append(gfx::vertex2d(j, integrals[i].f(j), colors[i]));
+    }
+
+    integrals_buffs[i].load_data();
+  }
 
   gfx::clock timer;
 
@@ -197,12 +217,13 @@ int main(int argc, const char* argv[])
   default_prg.use();
   //glUniform2fv(default_resolution_loc, 1, reinterpret_cast<const float*>(&resolution));
   glUniform2f(default_resolution_loc, (float)width, (float)height);
+  glUniform1f(u_alpha_loc, 1.f);
 
   float s = 2.f;
 
   //s must be an even number to center the origin correctly.
   //for better experiece ratio 1 / 20 is the best.
-  float max = (std::abs(*start_index) > std::abs(*end_index))? std::abs(*start_index) : std::abs(*end_index);
+  float max = (std::abs(*start) > std::abs(*finish))? std::abs(*start) : std::abs(*finish);
   Grid grid;
   grid.fill(max, max * 10.f );
 
@@ -273,32 +294,59 @@ int main(int argc, const char* argv[])
 
       libplug = dlopen("libplug." SUFFIX); //NOTE: this is a macro in windows and POSIX(UNIX)
       CHECK_SHARED_LIB(libplug);
-#define PLUG_FUNC(X) \
-      X = reinterpret_cast<X##_t>(dlsym(libplug, #X)); \
-      CHECK_SHARED_LIB(X);
 
-      LIST_OF_FUNCS;
-#undef  PLUG_FUNC
-      //func               = reinterpret_cast<func_t>(dlsym(libplug, "func"));
-      //CHECK_SHARED_LIB(func);
+      funcs = reinterpret_cast<func_t*>(dlsym(libplug, "funcs"));
+      colors =  reinterpret_cast<gfx::rgb*>(dlsym(libplug, "colors")); //get symbol using nm
 
-      float* start_index = reinterpret_cast<float*>(dlsym(libplug, "start_index")) ;
-      CHECK_SHARED_LIB(start_index);
-      float* end_index   = reinterpret_cast<float*>(dlsym(libplug, "end_index")) ;
-      CHECK_SHARED_LIB(end_index);
+      integrals = reinterpret_cast<func_t*>(dlsym(libplug, "integrals"));
+      integrals_colors =  reinterpret_cast<gfx::rgb*>(dlsym(libplug, "integrals_colors"));
 
-#define PLUG_FUNC(X)                                                \
-  X##_buff.clear();                                                 \
-  X##_buff.bind();                                                  \
-  for(float i = *start_index; i <= *end_index + EPSILON; i += 0.025) \
-  {                                                                 \
-    X##_buff.append(gfx::vertex2d(i, X(i), *X##_color));     \
-  }                                                                 \
-  X##_buff.load_data();
+      start = reinterpret_cast<float*>(dlsym(libplug, "start")) ;
+      finish   = reinterpret_cast<float*>(dlsym(libplug, "finish")) ;
 
-  LIST_OF_FUNCS;
-#undef PLUG_FUNC
+      CHECK_SHARED_LIB(funcs);
+      CHECK_SHARED_LIB(colors);
+      CHECK_SHARED_LIB(integrals);
+      CHECK_SHARED_LIB(integrals_colors);
+      CHECK_SHARED_LIB(start);
+      CHECK_SHARED_LIB(finish);
 
+      funcs_num = 0;
+      while(funcs[funcs_num ] != NULL)
+      {
+        ++funcs_num;
+      }
+
+      integrals_num = 0;
+      while(integrals[integrals_num] != NULL)
+      {
+        ++integrals_num;
+      }
+
+      for(int i = 0; i < funcs_num; ++i)
+      {
+
+        buffs[i].clear();                                                 
+        buffs[i].bind();                                                  
+        for(float j = *start; j <= *finish + EPSILON; j += 0.025) 
+        {                                                                 
+          buffs[i].append(gfx::vertex2d(j, funcs[i](j), colors[i]));     
+        }                                                                 
+        buffs[i].load_data();
+      }
+
+      for(int i = 0; i < integrals_num; ++i)
+      {
+
+        integrals_buffs[i].clear();                                                 
+        integrals_buffs[i].bind();                                                  
+        for(float j = *start; j <= *finish + EPSILON; j += 0.025) 
+        {                                                                 
+          integrals_buffs[i].append(gfx::vertex2d(j, 0, colors[i]));     
+          integrals_buffs[i].append(gfx::vertex2d(j, funcs[i](j), colors[i]));     
+        }                                                                 
+        integrals_buffs[i].load_data();
+      }
     }
 
     default_prg.use();
@@ -312,11 +360,15 @@ int main(int argc, const char* argv[])
       axis_buff.draw(GL_LINES);
 
       glLineWidth(4.f);
-#define PLUG_FUNC(X)                        \
-      X##_buff.draw(GL_LINE_STRIP);
 
-      LIST_OF_FUNCS;
-#undef PLUG_FUNC
+      glUniform1f(u_alpha_loc, 0.3);
+      for(int i = 0; i < integrals_num; ++i)
+        integrals_buffs[i].draw(GL_TRIANGLE_STRIP);
+      glUniform1f(u_alpha_loc, 1.f);
+
+      for(int i = 0; i < funcs_num; ++i)
+        buffs[i].draw(GL_LINE_STRIP);
+
       points.draw(GL_POINTS);
     context.display();
 

@@ -1,8 +1,8 @@
 #include <GFX/system/color.hpp>
-
 #include <cmath>
 
-#include "plug.hpp"
+typedef float (*func_t)(float);
+
 
 #define EPSILON 0.0001
 
@@ -18,65 +18,40 @@
  * NOTE: this is a must in our case. or the app will crash!!!
  */
 
-#ifdef WIN32
-  #define EXPORTING __declspec(dllexport) __stdcall
-#else
-  #define EXPORTING
-#endif
+gfx::rgb colors[] = {
+  gfx::gruv::yellow,
+};
 
-gfx::rgb EXPORTING func_color  = gfx::gruv::aqua;
-gfx::rgb EXPORTING func2_color = gfx::gruv::red;
-gfx::rgb EXPORTING func3_color = gfx::gruv::green;
+gfx::rgb integrals_colors[] = {
+  gfx::gruv::red,
+};
 
 extern "C"
 {
 
-    float ease_out(float t)
-    {
-      const float n1 = 7.5625;
-      const float d1 = 2.75;
-
-      if(t < 1.f / d1)
-      {
-        return n1 * t * t;
-      } else if(t < 2.f / d1)
-      {
-        return n1 * (t -= 1.5f / d1) * t +  0.75f;
-      } else if(t < 2.5f / d1)
-      {
-        return n1 * (t -= 2.25f / d1) * t + 0.9375f;
-      } 
-
-      return n1 * (t -= 2.625f / d1) * t + 0.984375f;
-    }
-
-    float ease_in(float x)
-    {
-      return 1 - ease_out(1 - x);
-    }
-
-    float ease_inout(float x)
-    {
-      return (x < 0.5)? (1 - ease_out(1 - 2 * x)) / 2
-                      : (1 + ease_out(2 * x - 1)) / 2;
-    }
-
-#define A 0.5
-  float EXPORTING func(float x)
+  struct Integration
   {
-    return (1 / (std::abs(A) * std::sqrt(M_PI))) * std::exp(-std::pow(x / A, 2));
+    func_t f = NULL;
+    int a = 0, b = 0;
+  };
+
+  float f(float x)
+  {
+    return x * x * x;
   }
 
-  float EXPORTING func2(float x)
+  func_t funcs[] = 
   {
-    return ease_in(x);
-  }
+    f,
+    NULL,                        //should exits to know the count of the functions
+  };
 
-  float EXPORTING func3(float x)
+  Integration integrals[] = 
   {
-    return ease_out(x);
-  }
+    {f, 0, 10},
+    {NULL, 0, 0},                //should exits to know the count of the integrals functions
+  };
 
-  float EXPORTING start_index = -5.0;
-  float EXPORTING end_index   =  5.0;
+  float start  = -5;
+  float finish =  5;
 }
