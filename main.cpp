@@ -173,7 +173,7 @@ int main(int argc, const char* argv[])
     ++integrals_num;
   }
 
-  printf("%u functions are loaded\n", funcs_num); 
+  Log::debug(std::to_string(funcs_num) + " functions are loaded\n"); 
 
   gfx::vbuffer<gfx::vertex2d> buffs[funcs_num];
   gfx::vbuffer<gfx::vertex2d> integrals_buffs[integrals_num];
@@ -258,7 +258,7 @@ int main(int argc, const char* argv[])
     {
       auto mx = gfx::mouse::x * s  + eye.x;
       auto my = gfx::mouse::y * s  + eye.y;
-      std::cout << std::setprecision(5)
+      std::cout << "point -> " << std::setprecision(5)
                 << "x: " << std::setw(10) << std::left << mx << ' '
                 << "y: " << std::setw(10) << std::left << my << '\n';
 
@@ -383,7 +383,7 @@ int main(int argc, const char* argv[])
 
       glUniform1f(u_alpha_loc, 0.3);
       for(int i = 0; i < integrals_num; ++i)
-        integrals_buffs[i].draw(GL_TRIANGLE_STRIP);
+        integrals_buffs[i].draw(GL_TRIANGLE_STRIP); // GL_TRIANGLE_STRIP
       glUniform1f(u_alpha_loc, 1.f);
 
       for(int i = 0; i < funcs_num; ++i)

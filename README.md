@@ -16,12 +16,16 @@ define the color for the function. see (src/plug.cpp)
 
 ### In this program, you can find some interesting techniques:
 - hot-reloading code with dlfcn.h header using POSIX.
-- X_macro to be able to draw many functions without even touching main.cpp. (but you still need to recompile)
 - these tricks were learnt from a weird Russian man who owns a YT channel called tsoding-daily. 
 
 ### NOTE
 - Now graph-calc is supported on Windows :smile:.
 
 
+### Legacy
+- I used X_macro to be able to draw many functions without even touching main.cpp. (but you still need to recompile)
+- X_macro is better when dealing with different functions of different types and parameters, but this is not the case in this program, So using an array of function pointers was better.
+
 ![smooth step function (older version of this program)](imgs/smoothstep.png)
 ![cosine function](imgs/cosine.png)
+![function integration](imgs/integral.png)
